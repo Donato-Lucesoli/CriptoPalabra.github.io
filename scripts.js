@@ -168,24 +168,62 @@ function finalizarIntento() {
      if (juegoTerminado) return;
      if (palabraActual.length === 0) return;
 
+     const palabraIntento = palabraActual.join("").toLowerCase();
+     const palabraIntentoNormalizada = quitarTildes(palabraIntento);
+
+     // 🎯 NUEVA VALIDACIÓN: palabra completa correcta
+if (palabraIntentoNormalizada === palabraSecretaNormalizada) {
+
+     // 🎨 Pintar todas las letras del intento como correctas
+     palabraActual.forEach((letra, index) => {
+          const caja = filaActual.children[index];
+
+          caja.classList.add("correcta");
+
+          marcarTecla(letra, "correcta");
+     });
+
+     // Revelar palabra completa visualmente (con tildes originales)
+     const filaOculta = document.querySelector(".fila-oculta");
+
+     palabraSecreta.split("").forEach((letra, i) => {
+          const caja = filaOculta.children[i];
+          caja.textContent = letra;
+
+          caja.classList.remove("animate__animated", "animate__fadeIn");
+          void caja.offsetWidth;
+
+          caja.classList.add("animate__animated", "animate__fadeIn");
+          caja.style.animationDuration = "0.8s";
+     });
+
+     juegoTerminado = true;
+
+     setTimeout(() => {
+          mostrarVictoria();
+     }, 1000);
+
+     return;
+}
+
      const historialPrevio = { ...letrasHistoricas };
      const letrasUnicas = [...new Set(palabraActual)];
 
      palabraActual.forEach((letra, index) => {
-     const caja = filaActual.children[index];
-     const letraNormalizada = quitarTildes(letra);
+          const caja = filaActual.children[index];
+          const letraNormalizada = quitarTildes(letra);
 
-     if (historialPrevio[letra]) {
-          if (palabraSecretaNormalizada.includes(letraNormalizada)) {
-               caja.classList.add("correcta");
-               revelarLetra(letra);
-               marcarTecla(letra, "correcta");
-          } else {
-               caja.classList.add("incorrecta");
-               marcarTecla(letra, "incorrecta");
+          if (historialPrevio[letra]) {
+               if (palabraSecretaNormalizada.includes(letraNormalizada)) {
+                    caja.classList.add("correcta");
+                    revelarLetra(letra);
+                    marcarTecla(letra, "correcta");
+               } else {
+                    caja.classList.add("incorrecta");
+                    marcarTecla(letra, "incorrecta");
+               }
           }
-     }
-});
+     });
 
      letrasUnicas.forEach(letra => {
           letrasHistoricas[letra] = true;
@@ -347,7 +385,7 @@ function mostrarVictoria() {
           "Felicitaciones, pero ¿Serás capáz de adivinar la próxima palabra?",
           "Sabía que podías hacerlo, pero ¿Eres capáz de repetir la hazaña con una palabra más difícil?",
           "En promedio la mayoría de los jugadores logran adivinar la primera palabra secreta, pero no la segunda ¿Perteneces a ese grupo?",
-          "Admito que elegí una palabra fácil para empezar, la próxima es un reto de verdad",
+          "Admito que elegí una palabra fácil, la próxima es un reto de verdad",
           "Veo que te levantantes con la palabra correcta, dudo que esa suerte te acompañe en la próxima ronda..."
      ];
 
