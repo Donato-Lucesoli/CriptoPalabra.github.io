@@ -11,6 +11,15 @@ const botonReiniciar = document.querySelector(".btn-reiniciar");
 const iconMoon = document.querySelector(".bi-moon");
 const iconSun = document.querySelector(".bi-sun");
 
+
+let estadisticas = {
+     jugadas: 0,
+     victorias: 0,
+     derrotas: 0,
+     rachaActual: 0,
+     mejorRacha: 0,
+     ultimaPartida: null
+};
 let palabraSecreta = "";
 let palabraSecretaNormalizada = "";
 let borrando = false;
@@ -83,6 +92,86 @@ function reiniciarJuego() {
 botonReiniciar.addEventListener("click", () => {
      reiniciarJuego();
 });
+
+
+/* ===============================
+    ESTADÍSTICAS
+=================================*/
+
+function cargarEstadisticas() {
+     const data = localStorage.getItem("estadisticasJuego");
+     if (data) {
+          estadisticas = JSON.parse(data);
+     }
+}
+
+function guardarEstadisticas() {
+     localStorage.setItem("estadisticasJuego", JSON.stringify(estadisticas));
+}
+
+function registrarVictoria() {
+     estadisticas.jugadas++;
+     estadisticas.victorias++;
+     estadisticas.rachaActual++;
+
+     if (estadisticas.rachaActual > estadisticas.mejorRacha) {
+          estadisticas.mejorRacha = estadisticas.rachaActual;
+     }
+
+     estadisticas.ultimaPartida = {
+          resultado: "Victoria",
+          intentosUsados: intentos + 1,
+          palabra: palabraSecreta,
+          fecha: new Date().toLocaleString()
+     };
+
+     guardarEstadisticas();
+}
+
+function registrarDerrota() {
+     estadisticas.jugadas++;
+     estadisticas.derrotas++;
+     estadisticas.rachaActual = 0;
+
+     estadisticas.ultimaPartida = {
+          resultado: "Derrota",
+          intentosUsados: MAX_INTENTOS,
+          palabra: palabraSecreta,
+          fecha: new Date().toLocaleString()
+     };
+
+     guardarEstadisticas();
+}
+
+function mostrarEstadisticas() {
+
+     const porcentaje = estadisticas.jugadas === 0
+          ? 0
+          : Math.round((estadisticas.victorias / estadisticas.jugadas) * 100);
+
+     Swal.fire({
+          title: "Estadísticas",
+          html: `
+               <div class="stats-container">
+                    <p><strong>Partidas jugadas:</strong> ${estadisticas.jugadas}</p>
+                    <p><strong>Victorias:</strong> ${estadisticas.victorias}</p>
+                    <p><strong>Derrotas:</strong> ${estadisticas.derrotas}</p>
+                    <p><strong>Porcentaje de victoria:</strong> ${porcentaje}%</p>
+                    <hr>
+                    <p><strong>Racha actual:</strong> ${estadisticas.rachaActual}</p>
+                    <p><strong>Mejor racha:</strong> ${estadisticas.mejorRacha}</p>
+                    <p><strong>Última partida:</strong> ${estadisticas.ultimaPartida ? estadisticas.ultimaPartida.fecha : "No hay partidas registradas aún."}</p>
+               </div>
+          `,
+          confirmButtonText: "Cerrar",
+          customClass: {
+               popup: "swal-popup",
+               title: "swal-title",
+               confirmButton: "swal-confirm"
+          },
+          buttonsStyling: false
+     });
+}
 
 
 /* ===============================
@@ -381,6 +470,9 @@ botonesTeclado.forEach(boton => {
 =================================*/
 
 function mostrarVictoria() {
+
+     registrarVictoria();
+
      const frasesVictoria = [
           "Felicitaciones, pero ¿Serás capáz de adivinar la próxima palabra?",
           "Sabía que podías hacerlo, pero ¿Eres capáz de repetir la hazaña con una palabra más difícil?",
@@ -409,6 +501,9 @@ function mostrarVictoria() {
 }
 
 function mostrarDerrota() {
+
+     registrarDerrota();
+
      const frasesDesafiantes = [
           "Te reto a que lo intentes de nuevo, aunque no creo que puedas cambiar el resultado...",
           "Deberías abandonar porque no sé si podrás adivinar la próxima palabra...",
@@ -485,6 +580,9 @@ function mostrarOnboarding() {
 =================================*/
 
 document.addEventListener("DOMContentLoaded", function () {
+
+     cargarEstadisticas();
+
      if (!localStorage.getItem("onboardingOculto")) {
           setTimeout(() => {
                 mostrarOnboarding();
@@ -494,6 +592,11 @@ document.addEventListener("DOMContentLoaded", function () {
      const botonInfo = document.querySelector(".btn-info");
      if (botonInfo) {
           botonInfo.addEventListener("click", mostrarOnboarding);
+     }
+
+     const botonStats = document.querySelector(".btn-stats");
+     if (botonStats) {
+          botonStats.addEventListener("click", mostrarEstadisticas);
      }
 });
 
